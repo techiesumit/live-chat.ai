@@ -1,0 +1,129 @@
+########################
+# OS / Editor cruft
+########################
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.swo
+
+# VS Code local settings (optional)
+.vscode/
+
+########################
+# Frontend (Vite + React)
+########################
+
+# Dependencies
+frontend/node_modules/
+
+# Vite build output
+frontend/dist/
+frontend/dist-ssr/
+
+# Vite cache
+frontend/.vite/
+frontend/.vite-cache/
+
+# Vite env files
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+########################
+# Backend (FastAPI / Python)
+########################
+
+# Byte-compiled / optimized / DLL files
+backend/__pycache__/
+backend/**/*.py[cod]
+backend/**/*$py.class
+
+# C extensions
+backend/**/*.so
+
+# Build / distribution
+backend/build/
+backend/develop-eggs/
+backend/dist/
+backend/downloads/
+backend/eggs/
+backend/.eggs/
+backend/lib/
+backend/lib64/
+backend/parts/
+backend/sdist/
+backend/var/
+backend/wheels/
+backend/share/python-wheels/
+backend/*.egg-info/
+backend/.installed.cfg
+backend/*.egg
+
+# PyInstaller
+backend/**/*.manifest
+backend/**/*.spec
+
+# Unit test / coverage
+backend/.coverage
+backend/.coverage.*
+backend/.cache
+backend/nosetests.xml
+backend/coverage.xml
+backend/*.cover
+backend/*.py,cover
+backend/.hypothesis/
+backend/.pytest_cache/
+
+# Logs and SQLite DB (common in dev)
+backend/*.log
+backend/db.sqlite3
+
+# Local settings
+backend/local_settings.py
+
+# Virtual environments
+backend/.venv/
+backend/venv/
+backend/env/
+backend/ENV/
+backend/env.bak/
+backend/venv.bak/
+
+# Jupyter
+backend/.ipynb_checkpoints
+
+# Type checkers / linters
+backend/.mypy_cache/
+backend/.dmypy.json
+backend/dmypy.json
+backend/.pyre/
+backend/.pytype/
+backend/.ruff_cache/
+
+########################
+# Common tooling / IDE
+########################
+
+.idea/
+*.iml
+
+# Global venv in root (if you create any)
+.venv/
+venv/
+env/
+ENV/
+
+########################
+# Misc
+########################
+
+htmlcov/
