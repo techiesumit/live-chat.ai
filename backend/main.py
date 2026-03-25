@@ -1,14 +1,14 @@
+from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from sqlalchemy.orm import Session
 
 from database import SessionLocal, engine, Base
-from models import User, ChatSession, ChatMessage
-from pydantic import BaseModel, ConfigDict
 from models import User, ChatSession, ChatMessage, ChatEvent
+from pydantic import BaseModel, ConfigDict
 
-
+# Create tables if they don't exist
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -21,6 +21,9 @@ app.add_middleware(
 )
 
 
+# ---------- DB dependency ----------
+
+
 def get_db():
     db = SessionLocal()
     try:
@@ -29,11 +32,14 @@ def get_db():
         db.close()
 
 
-class Message(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+# ---------- Pydantic models (v2) ----------
 
+
+class Message(BaseModel):
     role: str
     text: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ChatRequest(BaseModel):
@@ -48,10 +54,10 @@ class ChatResponse(BaseModel):
 
 
 class AdminSession(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     session_id: str
     messages: List[Message]
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserOut(BaseModel):
@@ -62,27 +68,19 @@ class UserOut(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class EventOut(BaseModel):
     id: int
     event_type: str
     session_id: int | None = None
     user_id: int | None = None
     detail: str | None = None
-    created_at: str
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
 
-def get_or_create_session(db: Session, session_token: str) -> ChatSession:
-    session = (
-        db.query(ChatSession).filter(ChatSession.session_token == session_token).first()
-    )
-    if session is None:
-        session = ChatSession(session_token=session_token)
-        db.add(session)
-        db.commit()
-        db.refresh(session)
-    return session
+# ---------- Helper functions ----------
 
 
 def get_or_create_session(db: Session, session_token: str) -> ChatSession:
@@ -134,6 +132,9 @@ def record_event(
     return event
 
 
+# ---------- Endpoints ----------
+
+
 @app.post("/api/user", response_model=UserOut)
 def attach_demo_user(session_id: str, db: Session = Depends(get_db)):
     """
@@ -160,12 +161,15 @@ def attach_demo_user(session_id: str, db: Session = Depends(get_db)):
         chat_session.user_id = user.id
         db.add(chat_session)
         db.commit()
-        record_event(
-            db,
-            event_type="LOGIN",
-            session=chat_session,
-            user=user,
-        )
+
+    # Record login event
+    record_event(
+        db,
+        event_type="LOGIN",
+        session=chat_session,
+        user=user,
+        detail="Demo member login attached to session",
+    )
 
     return UserOut.model_validate(user)
 
@@ -174,6 +178,7 @@ def attach_demo_user(session_id: str, db: Session = Depends(get_db)):
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
     session = get_or_create_session(db, req.session_id)
 
+    # Save user message and event
     add_message(db, session, role="user", text=req.message)
     record_event(
         db,
@@ -184,6 +189,7 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
 
     lower = req.message.lower()
 
+    # Escalation path
     if "agent" in lower or "escalate" in lower:
         bot_msg = add_message(
             db,
@@ -205,6 +211,7 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
         )
         return build_response(req.session_id, [bot_msg, agent_msg], escalated=True)
 
+    # Simple FAQ logic
     if "claim" in lower:
         answer = "For claims, this demo bot would show claim status (mock)."
     elif "provider" in lower:
@@ -249,12 +256,10 @@ def get_session(session_id: str, db: Session = Depends(get_db)):
         messages=[Message.model_validate(m) for m in session.messages],
     )
 
+
 @app.get("/api/admin/events", response_model=List[EventOut])
 def list_events(limit: int = 100, db: Session = Depends(get_db)):
     events = (
-        db.query(ChatEvent)
-        .order_by(ChatEvent.created_at.desc())
-        .limit(limit)
-        .all()
+        db.query(ChatEvent).order_by(ChatEvent.created_at.desc()).limit(limit).all()
     )
     return [EventOut.model_validate(e) for e in events]
