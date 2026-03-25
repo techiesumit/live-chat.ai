@@ -1,9 +1,12 @@
+# app/services/event_service.py
+
 from sqlalchemy.orm import Session
+from typing import Optional
+
 from app.models.event import ChatEvent
 from app.models.session import ChatSession
 from app.models.user import User
 from app.core.config import settings
-from typing import Optional
 
 
 def record_event(
@@ -23,9 +26,12 @@ def record_event(
     db.commit()
     db.refresh(event)
 
-    # Hook for future AWS event pipeline
-    if settings.event_pipeline in ("eventbridge", "kinesis"):
-        # TODO: publish to EventBridge / Kinesis in AWS mode
+    # ── Future AWS event pipeline hook ────────────────────────────
+    if settings.event_pipeline == "eventbridge":
+        # TODO: publish to AWS EventBridge
+        pass
+    elif settings.event_pipeline == "kinesis":
+        # TODO: publish to AWS Kinesis stream
         pass
 
     return event
